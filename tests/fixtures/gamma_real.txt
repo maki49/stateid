@@ -1,0 +1,15 @@
+3 (number of bands)
+3 (number of orbitals)
+1 (band)
+-1.0 (Ry)
+1.0 (Occupations)
+1.0 0.0 0.0
+2 (band)
+0.2 (Ry)
+0.0 (Occupations)
+0.0 1.0
+0.0
+3 (band)
+0.2 (Ry)
+0.0 (Occupations)
+0.0 0.0 1.0
