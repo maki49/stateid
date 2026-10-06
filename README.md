@@ -14,15 +14,16 @@
 辅助判断缺陷态、分子态及固体中局域电子态的物理身份。教程同时讲公式、适用条件
 和诊断量，而不只是文件操作。首阶段 **ABACUS-first**，数值核心与软件 IO 分离。
 
-当前为 `0.1.0` 初始框架：基态轨道与 Slater 行列式可分析；LR/TDA 已有数据模型、
+当前为 `0.2.0`：基态轨道与 Slater 行列式可分析；新旧 ABACUS 文本 CSR、
+任意 k 点 Fourier 变换和复数多 k 波函数文本已接入。LR/TDA 已有数据模型、
 标准化交换格式、基础对称性和显式算符收缩接口，**还不能直接从完整 ABACUS LR
 计算目录自动识别激发态，也不能自动输出 NV⁻ 的 ³E 结论**。
 
 | 模块 | 已实现 | 待实现 |
 |---|---|---|
-| ABACUS 波函数 IO | 单帧、Γ 点、实数 LCAO 文本 | 复数多 k、二进制、追加帧、spinor |
+| ABACUS 波函数 IO | 单帧 Γ 实数/多 k 复数 LCAO 文本，共用解析器 | 二进制、追加帧、spinor 语义 |
 | ABACUS 元数据 | `OutputReader` / `AbacusReader` 接口 | 日志、STRU、AO 标签与计算版本联动 |
-| 重叠矩阵 IO | 显式 `stateid_npy` 稠密 S | 原生新旧 CSR S(R)、S(k) |
+| 重叠矩阵 IO | 新旧文本 CSR S(R)、单/多 k 的 S(k)、NPY | 二进制与其他 CSR 方言 |
 | LR eigenvector IO | `stateid_npz` v1 的 X/Y、能量、ph 映射 | ABACUS 原生 LR 文件、MPI 分片重组 |
 | symmetry | S-正交化、D/χ、闭合误差、C3v 群关系及 irrep 匹配 | 从结构与 AO 标签自动组装 T(R) |
 | 球谐约定 | ABACUS m 顺序与复/实球谐基变换 | 完整 Wigner D、Euler 角和原子映射适配 |
@@ -30,12 +31,13 @@
 
 未实现的格式/API 会明确抛出 `NotImplementedError`（IO 使用其子类
 `UnsupportedFormatError`），不会猜测矩阵顺序或用虚构数据继续计算。
-初期限于无 SOC、共线自旋、Γ 点/有限体系的幺正空间对称性；不支持磁群、双群、
-反幺正操作或连接不同 k 点的操作。数组核心允许复数，这不等于已经支持这些物理情形。
+当前对称性识别以无 SOC、共线自旋、Γ 点/有限体系为主；IO/Fourier 已支持任意 k。
+非 Γ 点的 irrep 分析需要 k 的小群及相应 T(R,k)，尚不自动构造；磁群、双群、
+反幺正操作与跨 k 映射也未接入。多 k 读取不等于这些物理分类已经完成。
 
 ## 安装和运行
 
-Python ≥ 3.10，运行时仅依赖 NumPy；测试使用标准库 unittest。
+Python ≥ 3.10，运行时依赖 NumPy 和 SciPy；稀疏矩阵直接使用 SciPy，测试使用标准库 unittest。
 从仓库根目录执行：
 
 ```bash
@@ -46,7 +48,7 @@ python -m unittest discover -s tests -v
 python examples/c3v_minimal.py
 ```
 
-本次 WSL 初始化已创建 `.venv`，复用本机已有 NumPy；可直接从激活环境这一步开始。
+本次 WSL 初始化已创建 `.venv`，复用本机已有 NumPy/SciPy；可直接从激活环境这一步开始。
 纯净环境按上面的安装流程重建即可。预期最小示例输出：
 
 ```text
@@ -66,6 +68,32 @@ assert not match_characters([2, -0.7, 0]).valid
 
 这里的三个数是**各类代表元的特征标或类内平均**，不是类内求和。
 数组匹配只能检查特征标相容性；完整流程应使用 `analyze_c3v`，同时检查子空间闭合和群关系。
+
+## 新旧 CSR 与多 k 点
+
+新旧格式只有文件头适配不同，CSR 数值、列索引、行指针共用一个解析器。
+`RealSpaceMatrix` 是与软件无关的稀疏 X(R) 容器，可用于 S 或 H，不自动改单位。
+
+```python
+from stateid.io import AbacusReader, read_csr
+
+sr = read_csr("path/to/sr_nao.csr")  # 旧 data-SR-sparse_SPIN0.csr 也用同一接口
+kpoints = [[0, 0, 0], [0.25, 0, 0], [0.5, 0.25, 0]]  # 倒格分数坐标
+Sk = sr.to_k(kpoints)               # (nk, nao, nao)
+S_gamma = sr.to_k([0, 0, 0])        # (nao, nao)
+
+reader = AbacusReader()
+Sk_checked = reader.read_overlap("path/to/sr_nao.csr", format="abacus_csr",
+                                 kpoints=kpoints)  # 逐 k 检查 Hermitian/正定
+orbitals = reader.read_wavefunctions("path/to/wfs1k1_nao.txt", spin="alpha")
+```
+
+采用 pyATB 同样的 cell gauge：\(X(k)=\sum_R e^{+2\pi i k\cdot R}X(R)\)。
+不乘 k 权重、不除以 R 数，不假设单个 X(R) 是 Hermitian。
+多离子步文件必须显式选 `frame=0,1,...`（文件段序号，不是原始 step 标签）。
+波函数头中的 `k_cartesian` 是 **2π/lat0 单位的笛卡尔坐标**，不能直接当 kpoints；
+用 `k_cartesian_to_fractional(k_cartesian, lattice_vectors)` 转换。详情见
+[IO 合约](docs/io-formats.md)和[多 k 教程](docs/tutorials/04-csr-multik.md)。
 
 ## 物理核心：表示矩阵与 character
 
@@ -154,7 +182,7 @@ from stateid.symmetry import analyze_c3v
 # 示意：替换成真实文件；S 和 operations 尚需人工提供/后续适配器生成。
 reader = AbacusReader()
 down = reader.read_wavefunctions("path/to/down_gamma.txt", spin="beta")
-S = reader.read_overlap("path/to/validated_S.npy", format="stateid_npy")
+S = reader.read_overlap("path/to/sr_nao.csr", format="abacus_csr")  # Γ 点
 # operations: 完整六个 AO 系数变换 T(R)，需先验证 AO 顺序与旋转约定。
 # 此处假设 126/127/128 是文件中从 1 开始的 band 标签；先核对原始输出！
 a1 = analyze_c3v(down.coefficients[:, [125]], operations, S,
@@ -169,10 +197,10 @@ e = analyze_c3v(down.coefficients[:, [126, 127]], operations, S,
 
 ## 路线图与目录
 
-1. **已完成的种子层**：数值核心、C3v、行列式自旋、Gamma 文本、数组交换与合成测试。
-2. **下一步优先**：实现 ABACUS 原生 `sr_nao.csr` / 旧式 S(R) 读取，显式选择离子步，
-   构造 \(S(\Gamma)=\sum_R S(R)\)，与同一次计算的 C 校验 \(C^\dagger SC\approx I\)。
-3. 接入 STRU/数值轨道头信息与 AO 标签，从结构、原子映射、实球谐旋转组装 T(R)。
+1. **已完成**：数值核心、C3v、行列式自旋、Gamma/多 k 文本、新旧 CSR、通用 Fourier、数组交换。
+2. **下一步优先**：收集同次计算的 C(k)、S(R)、结构及 AO 元数据，完成真实
+   \(C(k)^\dagger S(k)C(k)\approx I\) 联合回归；目前文件读取与 S(k) 已独立验证。
+3. 接入 STRU/数值轨道头信息与 AO 标签，从结构、原子映射、实球谐旋转组装 T(R,k)。
 4. 接入 ABACUS LR 全局 ph 索引、spin block、MPI 分片、X/Y 定义；先 TDA，再完整 LR。
 5. 增加真实 NV⁻ 回归案例、更多点群与多电子态分析；稳定数据模型后添加其他软件适配器。
 
@@ -182,6 +210,7 @@ stateid/
 ├── pyproject.toml
 ├── src/stateid/
 │   ├── io/          # 软件适配器、数据模型、明确的格式边界
+│   ├── realspace.py # 通用稀疏 X(R) 与任意 k 点 Fourier 变换
 │   ├── symmetry/    # 表示、特征标、C3v、球谐与 ph 基础操作
 │   └── spin/        # 行列式 S²、TDA 收缩与 LR 预留 API
 ├── examples/c3v_minimal.py

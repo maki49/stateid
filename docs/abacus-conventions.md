@@ -54,7 +54,25 @@ ABACUS `Symmetry_rotation` 的 AO 旋转对象也称 M，用于密度矩阵恢�
 - `source/source_base/module_out/csr_reader.cpp`、
   `source/source_io/module_hs/write_hs_r.cpp` 和
   `docs/advanced/interface/migration-guide-csr-format.md`：新旧 CSR 头、离子步、
-  晶胞和 S(R) 数据块；这是下一项 IO 工作的直接参考。
+  晶胞和 S(R) 数据块；这是 CSR IO 的直接参考。
+
+上述新旧文本 CSR 读取和 k 点 Fourier 已在 0.2.0 实现；后续仍需从同次计算的
+C(k)/S(R) 验证整个 AO 与 Bloch 约定。复数波函数头保存 `kvec_c`，
+`source/source_cell/klist.cpp` 明确其单位为 2π/lat0。
+
+## pyATB 参考与独立实现
+
+参考 `/home/fortneu/pyatb`，HEAD `80f7c2d89aaa8a736e4145f67a6e1d30c783be2d`。
+核查时 `src/pyatb/io/abacus_read_xr.py` 已有本地未提交更新，支持新旧 CSR。
+所读取文件的 SHA256 为
+`afff8d61f28ff16fecbfbc2b14c494240f812b846216dd223777cbf84b620805`；
+`src/cpp/core/base_data.cpp` 使用 exp(+2πi k·R)。本次未修改 pyATB。
+
+stateid 独立实现格式适配，使用 SciPy 的 CSR/reshape/vstack 与矩阵乘法，
+不依赖 pyATB 的 MPI/C++ 运行时，也未复制其 parser 实现。
+与 pyATB 为紧束缚求解保留上三角的结构不同，本库保留每个 X(R) 的完整非零项，
+让通用 Fourier 接口也适用于单个非 Hermitian 的 R 块；重叠矩阵检查放在更高层。
+实际文件的交叉验证结果见[多 k 教程](tutorials/04-csr-multik.md)。
 
 ABACUS 版本间文件名和布局有变化。本库依据内容和明确的 `format` 选择，
 不会仅依据 `WFC_NAO_GAMMA...` / `wfs..._nao.txt` 文件名宣称兼容。

@@ -73,7 +73,7 @@ class IOTests(unittest.TestCase):
     def test_native_placeholders_are_honest(self):
         reader = AbacusReader()
         for call in [lambda: reader.read_output("OUT"),
-                     lambda: reader.read_overlap("sr_nao.csr", format="abacus_csr"),
+                     lambda: reader.read_overlap("sr_nao.csr", format="binary"),
                      lambda: reader.read_lr_eigenvectors("X.dat", format="abacus_lr"),
                      lambda: reader.read_wavefunctions("wfc.dat", format="binary")]:
             with self.assertRaises(UnsupportedFormatError):
