@@ -7,6 +7,10 @@
 3. [NV⁻ 的证据链](03-nv-minus.md)：轨道 a1/e 与多电子 ³E 的区别。
 4. [新旧 CSR 与多 k](04-csr-multik.md)：Fourier 相位、坐标、S(k) 与波函数联合检查。
 
+5. [TDA 跃迁组成](05-transitions.md)：阈值裁剪、spin/band 标签和偏振。
+6. [AO 与 TDA 根表示](06-ao-tda-symmetry.md)：参考态相位与根子空间。
+7. [Bloch 变换与一般小群](07-bloch-little-group.md)：相位、spgrep、群关系和 IrRep 标签。
+
 这些教程包含初步推导与可运行 API 对应关系，后续将加入真实数据、图示与练习。
 仓库内可运行 fixture 是合成数据；此外已对本地 ABACUS 的新旧 CSR 和复数波函数文件
 做只读交叉验证，记录见第 4 节。NV⁻ 一节仍是未来接入匹配真实输出的分析方案。

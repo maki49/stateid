@@ -32,7 +32,7 @@ establish the NV⁻ ³E assignment.**
 | ABACUS metadata | `OutputReader` / `AbacusReader` interfaces; `Orbital` AO labels | Logs, STRU, and calculation-version integration |
 | Overlap IO | Legacy/modern text CSR S(R), single/multi-k S(k), NPY | Binary and other CSR dialects |
 | LR eigenvector IO | `stateid_npz` v1: X/Y, energies, ph mapping | Native complete ABACUS LR files, MPI shard reconstruction |
-| Symmetry | S-orthonormalization, D/χ, closure, C3v matching, Γ s/p/d AO operations, matrix-free TDA root projection | STRU integration and automatic symmetry discovery |
+| Symmetry | S-orthonormalization, Bloch s/p/d AO maps, little groups, spgrep irreps, general character decomposition, optional IrRep labels, Γ TDA root projection | STRU integration, multi-k LR, SOC/magnetic symmetry |
 | Harmonic conventions | ABACUS m order, complex/real basis conversion, Γ s/p/d proper/improper operations and periodic atom mapping | Higher angular momentum and full Wigner D |
 | Spin | Unrestricted-determinant ⟨S²⟩; TDA contraction with supplied S²_ph | Automatic S²_ph construction; full-LR spin response |
 
@@ -40,11 +40,11 @@ Unsupported formats and APIs explicitly raise `NotImplementedError` (or its IO
 subclass `UnsupportedFormatError`). They do not guess matrix order or continue
 with fabricated data.
 
-Symmetry identification currently targets collinear spin without SOC, mainly
-at Γ or in finite systems. IO and Fourier transforms support arbitrary k.
-Non-Γ irrep analysis requires the little group of k and the corresponding
-T(R,k), which are not constructed automatically. Magnetic groups, double groups,
-antiunitary operations, and maps between k points remain unsupported.
+Scalar unitary symmetry analysis now supports finite k in a primitive cell.
+Bloch AO construction supports s/p/d shells; geometry and AO labels are supplied
+explicitly. Optional spglib/spgrep discover geometric operations and generate
+small irreps. Magnetic/double groups, antiunitary operations, automatic cell
+conversion, and multi-k LR root analysis remain unsupported.
 
 ## Installation and quick start
 
@@ -80,6 +80,32 @@ assert not match_characters([2, -0.7, 0]).valid
 These values are **representative characters or class averages**, rather than
 sums over each class. Character matching alone checks compatibility; use
 `analyze_c3v` to also validate subspace closure and group relations.
+
+## Bloch symmetry and general little groups
+
+Optional backends are installed separately:
+
+~~~bash
+python -m pip install -e '.[symmetry]'  # spgrep
+python examples/bloch_little_group.py
+python -m pip install -e '.[labels]'    # versioned IrRep + irreptables adapter
+python examples/bloch_little_group.py --irrep-labels
+~~~
+
+The workflow is `build_bloch_ao_operation` → `spgrep_irreps` /
+`find_little_group` → `analyze_little_group`. It includes the atom-dependent
+Bloch phase and checks metric preservation, closure, and nonsymmorphic
+projective multiplication before decomposing characters. Geometry discovery
+through `symmetry_from_structure` does not establish electronic invariance.
+
+`c3v_labels` maps Gamma irreps to A1/A2/E; `irrep_labels` assigns BCS names at
+table-covered maximal k points. Local IDs such as `irrep_0` are not standard
+labels. The IrRep adapter is isolated and version-pinned because it uses an
+internal API. `project_sewing_matrix` provides two-sided cross-k projection
+without treating its trace as a character.
+
+See the [formula and API tutorial](docs/tutorials/07-bloch-little-group.md)
+and [implementation plan](docs/development/bloch-symmetry-plan.md).
 
 ## Legacy/modern CSR and multiple k points
 
@@ -238,7 +264,7 @@ m. Data-row order is the AO row order of C.
 `build_gamma_ao_operation` uses explicit fractional positions, row-vector
 lattice vectors, and active Cartesian operations to build Γ-point T for s/p/d
 shells. It returns atom mappings, lattice return vectors, and geometric errors.
-STRU parsing and automatic symmetry discovery remain unimplemented; validate
+STRU parsing remains unimplemented; optional symmetry discovery is available separately. Validate
 T†ST and orbital closure separately.
 
 `analyze_tda_c3v` supports one or two complete spin-conserving ph product blocks
@@ -256,10 +282,10 @@ X/Y and automatic spin-multiplicity inference are unsupported. See the
    matrix-free TDA subspace analysis.
 2. Next priority: collect C(k), S(R), structure, and AO metadata from the same
    calculation for a real joint $C(k)^\dagger S(k)C(k)\approx I$ regression.
-3. Integrate STRU/orbital metadata and symmetry discovery; extend T(R,k).
+3. Integrate STRU/orbital metadata with the Bloch builder and little-group workflow.
 4. Recover native ABACUS LR global ph indices, spin blocks, MPI shards, and X/Y
    conventions, starting with TDA.
-5. Add real NV⁻ regressions, more point groups, and many-electron analysis;
+5. Add real NV⁻ regressions and general multi-k many-electron analysis;
    introduce other backends as the data model stabilizes.
 
 ```text

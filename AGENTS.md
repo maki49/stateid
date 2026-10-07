@@ -17,3 +17,8 @@
 
 验证：`PYTHONPATH=src python3 -m unittest discover -s tests -v`。
 新增数值功能覆盖解析解、不变量、错误输入及独立布局对照。
+
+新增 Bloch/小群后端见 docs/development/bloch-symmetry-plan.md 与教程07。
+W/t/k 均为分数坐标，k'=W^-T k；非对称型乘法必须保留平移相位。
+spgrep 为可选依赖；IrRep 标签适配器固定版本，不按枚举序号猜标准标签。
+基准测试使用 .venv/bin/python；系统 python3 可能没有 SciPy。

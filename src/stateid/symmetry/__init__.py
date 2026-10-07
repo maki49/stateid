@@ -14,3 +14,18 @@ __all__ += ["AOLabel", "AOOperation", "build_gamma_ao_operation", "real_harmonic
 
 from .lr import TDASymmetryAnalysis, analyze_tda_c3v
 __all__ += ["TDASymmetryAnalysis", "analyze_tda_c3v"]
+
+from .bloch import BlochAOOperation, bloch_from_ao_operation, build_bloch_ao_operation
+from .groups import LittleGroup, find_little_group, symmetry_from_structure, transform_kpoint
+from .irreps import IrrepSet, LittleGroupAnalysis, spgrep_irreps, analyze_little_group
+from .labels import (IrrepLabels, c3v_labels, irrep_labels, match_irrep_labels,
+                     labels_from_character_table)
+from .representation import SewingMatrix, project_sewing_matrix
+from .tables import decompose_characters
+
+__all__ += ["BlochAOOperation", "bloch_from_ao_operation", "build_bloch_ao_operation",
+            "LittleGroup", "find_little_group", "symmetry_from_structure", "transform_kpoint",
+            "IrrepSet", "LittleGroupAnalysis", "spgrep_irreps", "analyze_little_group",
+            "IrrepLabels", "c3v_labels", "irrep_labels", "match_irrep_labels",
+            "labels_from_character_table", "SewingMatrix", "project_sewing_matrix",
+            "decompose_characters"]

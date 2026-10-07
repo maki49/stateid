@@ -27,15 +27,15 @@
 | ABACUS 元数据 | `OutputReader` / `AbacusReader` 接口 | 日志、STRU、AO 标签与计算版本联动 |
 | 重叠矩阵 IO | 新旧文本 CSR S(R)、单/多 k 的 S(k)、NPY | 二进制与其他 CSR 方言 |
 | LR eigenvector IO | `stateid_npz` v1 的 X/Y、能量、ph 映射 | ABACUS 原生完整 LR 文件、MPI 分片重组 |
-| symmetry | S-正交化、D/χ、闭合误差、C3v 匹配、Γ s/p/d AO 操作、矩阵无关 TDA 根投影 | STRU 接入与自动找群 |
+| symmetry | S-正交化、Bloch s/p/d AO 变换、小群、spgrep 表示、通用分解、可选 IrRep 标签、Γ TDA 根投影 | STRU 接入、多 k LR、SOC/磁群 |
 | 球谐约定 | ABACUS m 顺序、复/实基变换、Γ s/p/d 主动 proper/improper 及周期原子映射 | 更高 ell/Wigner D |
 | spin | unrestricted 行列式 ⟨S²⟩；给定 S²_ph 的 TDA 收缩 | 自动构建 S²_ph；完整 LR 的自旋响应方法 |
 
 未实现的格式/API 会明确抛出 `NotImplementedError`（IO 使用其子类
 `UnsupportedFormatError`），不会猜测矩阵顺序或用虚构数据继续计算。
-当前对称性识别以无 SOC、共线自旋、Γ 点/有限体系为主；IO/Fourier 已支持任意 k。
-非 Γ 点的 irrep 分析需要 k 的小群及相应 T(R,k)，尚不自动构造；磁群、双群、
-反幺正操作与跨 k 映射也未接入。多 k 读取不等于这些物理分类已经完成。
+当前标量幺正对称性分析已支持原胞中的非 Γ 点：从显式结构和 AO 标签构造 B(g,k)，
+筛选小群，并用可选 spgrep 后端生成参考表示。跨 k 投影也已有独立接口。
+磁群、双群、反幺正操作、自动换胞和多 k LR 根表示仍未实现；AO 旋转限 s/p/d。
 
 ## 安装和运行
 
@@ -69,6 +69,30 @@ assert not match_characters([2, -0.7, 0]).valid
 
 这里的三个数是**各类代表元的特征标或类内平均**，不是类内求和。
 数组匹配只能检查特征标相容性；完整流程应使用 `analyze_c3v`，同时检查子空间闭合和群关系。
+
+## Bloch 对称性与一般小群
+
+可选后端按需安装：
+
+~~~bash
+python -m pip install -e '.[symmetry]'  # spgrep
+python examples/bloch_little_group.py
+python -m pip install -e '.[labels]'    # 固定版本的 IrRep + irreptables
+python examples/bloch_little_group.py --irrep-labels
+~~~
+
+流程为 `build_bloch_ao_operation` → `spgrep_irreps` / `find_little_group`
+→ `analyze_little_group`。包含逐原子的 Bloch 相位，并在分解前检查 metric、
+子空间闭合和非对称型空间群的带相位乘法关系。
+`symmetry_from_structure` 可发现几何对称操作，但不替代电子态不变性检查。
+
+`c3v_labels` 在 Γ 点映射 A1/A2/E；`irrep_labels` 在外部表收录的 maximal k 点
+映射 BCS 标签。`irrep_0` 等只是本次计算的局部 ID，不是标准名称。
+IrRep 适配器使用内部 API，因此单独隔离并固定版本。
+`project_sewing_matrix` 提供跨 k 的双边投影，不把其迹当作 character。
+
+公式、输入约定、限制和用法见[完整教程](docs/tutorials/07-bloch-little-group.md)；
+分阶段实现与后续安排见[开发计划](docs/development/bloch-symmetry-plan.md)。
 
 ## 新旧 CSR 与多 k 点
 
@@ -201,9 +225,9 @@ e = analyze_c3v(down.coefficients[:, [126, 127]], operations, S,
 1. **已完成**：数值核心、C3v、行列式自旋、Gamma/多 k 文本、新旧 CSR、通用 Fourier、数组交换。
 2. **下一步优先**：收集同次计算的 C(k)、S(R)、结构及 AO 元数据，完成真实
    \(C(k)^\dagger S(k)C(k)\approx I\) 联合回归；目前文件读取与 S(k) 已独立验证。
-3. 接入 STRU/数值轨道头信息与 AO 标签，从结构、原子映射、实球谐旋转组装 T(R,k)。
+3. 接入 STRU/数值轨道头信息，将同次计算的元数据接到已有 Bloch AO 与小群流程。
 4. 接入 ABACUS LR 全局 ph 索引、spin block、MPI 分片、X/Y 定义；先 TDA，再完整 LR。
-5. 增加真实 NV⁻ 回归案例、更多点群与多电子态分析；稳定数据模型后添加其他软件适配器。
+5. 增加真实 NV⁻ 回归与一般多 k 多电子态分析；稳定数据模型后添加其他软件适配器。
 
 ```text
 stateid/
@@ -239,7 +263,7 @@ stateid/
 实球谐分量 index，转换为有符号 m；数据行顺序就是 C 的 AO 行顺序。
 `build_gamma_ao_operation` 用显式分数坐标、行向量晶胞和主动笛卡尔操作，
 构造 s/p/d 壳层的 Γ 点 T，返回原子映射、晶格返回矢量和几何误差。
-尚不自动解析 STRU 或查找对称群；必须进一步检查 T†ST 和轨道闭合。
+尚不自动解析 STRU；几何找群由可选独立接口提供，仍必须检查 T†ST 和轨道闭合。
 
 `analyze_tda_c3v` 支持一个或两个完整 spin-conserving ph 张量积块，
 不构造 ph² 矩阵，并从显式提供的完整 alpha/beta occupied 表示计算参考态相位。

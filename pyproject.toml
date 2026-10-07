@@ -17,6 +17,10 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Physics",
 ]
 
+[project.optional-dependencies]
+symmetry = ["spgrep>=0.7,<0.8"]
+labels = ["spgrep>=0.7,<0.8", "irrep==3.3.0", "irreptables==3.1.0"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
