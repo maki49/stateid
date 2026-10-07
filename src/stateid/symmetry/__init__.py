@@ -8,3 +8,9 @@ __all__ = ["C3V", "CharacterTable", "CharacterMatch", "Representation", "Symmetr
            "analyze_c3v", "class_characters", "match_characters", "orthonormalize",
            "project_representation", "magnetic_order", "complex_to_real_basis",
            "rotation_in_real_basis", "particle_hole_operation"]
+
+from .ao import AOLabel, AOOperation, build_gamma_ao_operation, real_harmonic_operation
+__all__ += ["AOLabel", "AOOperation", "build_gamma_ao_operation", "real_harmonic_operation"]
+
+from .lr import TDASymmetryAnalysis, analyze_tda_c3v
+__all__ += ["TDASymmetryAnalysis", "analyze_tda_c3v"]

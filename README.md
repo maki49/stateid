@@ -1,44 +1,55 @@
 # stateid
 
-**从第一性原理输出识别电子态的物理性质，并解释识别依据。**
+**English** | [简体中文](README.zh-CN.md)
 
-`stateid` 是 electronic **state identification** 的简写。相比 `state-identifier`，
-它更短，可以直接 `import stateid`；相比 `electronic-state-tools`，它更明确地强调
-“这个态是什么、证据有多强”，而非通用性质计算；相比 `state-analyzer`，它突出最终
-的物理归属。名字不绑定 ABACUS、基态或某一类缺陷，方便后续扩展。
-这是本地项目名称，尚未发布到 PyPI，也未确认公共名称的可注册性。
+**Evidence-based electronic-state identification from first-principles calculations, starting with ABACUS.**
 
-## 项目定位与当前边界
+`stateid` stands for electronic **state identification**. It combines symmetry,
+spin, transition composition, and other physical evidence to explain what an
+electronic state is and how strongly that assignment is supported. The name is
+independent of a particular code, ground state, or defect. The package has not
+yet been published to PyPI.
 
-愿景是把能量、轨道/激发态对称性、自旋、跃迁组分和局域性等证据组织起来，
-辅助判断缺陷态、分子态及固体中局域电子态的物理身份。教程同时讲公式、适用条件
-和诊断量，而不只是文件操作。首阶段 **ABACUS-first**，数值核心与软件 IO 分离。
+## Scope and current capabilities
 
-当前为 `0.2.0`：基态轨道与 Slater 行列式可分析；新旧 ABACUS 文本 CSR、
-任意 k 点 Fourier 变换和复数多 k 波函数文本已接入。LR/TDA 已有数据模型、
-标准化交换格式、基础对称性和显式算符收缩接口，**还不能直接从完整 ABACUS LR
-计算目录自动识别激发态，也不能自动输出 NV⁻ 的 ³E 结论**。
+The goal is to identify defect states, molecular states, and localized electronic
+states in solids using energies, orbital and excited-state symmetry, spin,
+transition composition, and localization. Tutorials explain the equations,
+assumptions, and diagnostics as well as file handling. The initial focus is
+**ABACUS**, with numerical physics separated from software-specific IO.
 
-| 模块 | 已实现 | 待实现 |
+Version `0.2.0` supports ground-state orbital and Slater-determinant analysis,
+legacy and modern ABACUS text CSR, Fourier transforms at arbitrary k points,
+and complex multi-k wavefunction text. LR/TDA support includes a data model,
+a standardized exchange format, explicit operator contractions, and matrix-free
+C3v analysis of complete TDA root subspaces. **It does not yet automatically
+identify excited states from a complete ABACUS LR calculation directory or
+establish the NV⁻ ³E assignment.**
+
+| Module | Implemented | Still needed |
 |---|---|---|
-| ABACUS 波函数 IO | 单帧 Γ 实数/多 k 复数 LCAO 文本，共用解析器 | 二进制、追加帧、spinor 语义 |
-| ABACUS 元数据 | `OutputReader` / `AbacusReader` 接口 | 日志、STRU、AO 标签与计算版本联动 |
-| 重叠矩阵 IO | 新旧文本 CSR S(R)、单/多 k 的 S(k)、NPY | 二进制与其他 CSR 方言 |
-| LR eigenvector IO | `stateid_npz` v1 的 X/Y、能量、ph 映射 | ABACUS 原生 LR 文件、MPI 分片重组 |
-| symmetry | S-正交化、D/χ、闭合误差、C3v 群关系及 irrep 匹配 | 从结构与 AO 标签自动组装 T(R) |
-| 球谐约定 | ABACUS m 顺序与复/实球谐基变换 | 完整 Wigner D、Euler 角和原子映射适配 |
-| spin | unrestricted 行列式 ⟨S²⟩；给定 S²_ph 的 TDA 收缩 | 自动构建 S²_ph；完整 LR 的自旋响应方法 |
+| ABACUS wavefunction IO | Single-frame Γ real and multi-k complex LCAO text | Binary, appended frames, spinor semantics |
+| ABACUS metadata | `OutputReader` / `AbacusReader` interfaces; `Orbital` AO labels | Logs, STRU, and calculation-version integration |
+| Overlap IO | Legacy/modern text CSR S(R), single/multi-k S(k), NPY | Binary and other CSR dialects |
+| LR eigenvector IO | `stateid_npz` v1: X/Y, energies, ph mapping | Native complete ABACUS LR files, MPI shard reconstruction |
+| Symmetry | S-orthonormalization, D/χ, closure, C3v matching, Γ s/p/d AO operations, matrix-free TDA root projection | STRU integration and automatic symmetry discovery |
+| Harmonic conventions | ABACUS m order, complex/real basis conversion, Γ s/p/d proper/improper operations and periodic atom mapping | Higher angular momentum and full Wigner D |
+| Spin | Unrestricted-determinant ⟨S²⟩; TDA contraction with supplied S²_ph | Automatic S²_ph construction; full-LR spin response |
 
-未实现的格式/API 会明确抛出 `NotImplementedError`（IO 使用其子类
-`UnsupportedFormatError`），不会猜测矩阵顺序或用虚构数据继续计算。
-当前对称性识别以无 SOC、共线自旋、Γ 点/有限体系为主；IO/Fourier 已支持任意 k。
-非 Γ 点的 irrep 分析需要 k 的小群及相应 T(R,k)，尚不自动构造；磁群、双群、
-反幺正操作与跨 k 映射也未接入。多 k 读取不等于这些物理分类已经完成。
+Unsupported formats and APIs explicitly raise `NotImplementedError` (or its IO
+subclass `UnsupportedFormatError`). They do not guess matrix order or continue
+with fabricated data.
 
-## 安装和运行
+Symmetry identification currently targets collinear spin without SOC, mainly
+at Γ or in finite systems. IO and Fourier transforms support arbitrary k.
+Non-Γ irrep analysis requires the little group of k and the corresponding
+T(R,k), which are not constructed automatically. Magnetic groups, double groups,
+antiunitary operations, and maps between k points remain unsupported.
 
-Python ≥ 3.10，运行时依赖 NumPy 和 SciPy；稀疏矩阵直接使用 SciPy，测试使用标准库 unittest。
-从仓库根目录执行：
+## Installation and quick start
+
+Requires Python ≥ 3.10, NumPy, and SciPy. Sparse matrices use SciPy; tests use
+standard-library `unittest`. From the repository root:
 
 ```bash
 python3 -m venv .venv
@@ -48,8 +59,7 @@ python -m unittest discover -s tests -v
 python examples/c3v_minimal.py
 ```
 
-本次 WSL 初始化已创建 `.venv`，复用本机已有 NumPy/SciPy；可直接从激活环境这一步开始。
-纯净环境按上面的安装流程重建即可。预期最小示例输出：
+Expected example output:
 
 ```text
 A1: characters=[1. 1. 1.], identified=A1
@@ -57,171 +67,226 @@ E: characters=[ 2. -1.  0.], identified=E
 two parallel spins: <S^2>=2.0
 ```
 
-也可直接匹配按共轭类排列的数值特征标：
+You can also match numerical characters ordered by conjugacy class:
 
 ```python
 from stateid.symmetry import match_characters
+
 assert match_characters([1, 1, 1]).irrep == "A1"
 assert match_characters([2, -1, 0]).irrep == "E"
 assert not match_characters([2, -0.7, 0]).valid
 ```
 
-这里的三个数是**各类代表元的特征标或类内平均**，不是类内求和。
-数组匹配只能检查特征标相容性；完整流程应使用 `analyze_c3v`，同时检查子空间闭合和群关系。
+These values are **representative characters or class averages**, rather than
+sums over each class. Character matching alone checks compatibility; use
+`analyze_c3v` to also validate subspace closure and group relations.
 
-## 新旧 CSR 与多 k 点
+## Legacy/modern CSR and multiple k points
 
-新旧格式只有文件头适配不同，CSR 数值、列索引、行指针共用一个解析器。
-`RealSpaceMatrix` 是与软件无关的稀疏 X(R) 容器，可用于 S 或 H，不自动改单位。
+The two CSR formats use different header adapters and share the numerical
+parser for values, column indices, and row pointers. `RealSpaceMatrix` is a
+backend-neutral sparse X(R) container for S or H; it does not convert units.
 
 ```python
 from stateid.io import AbacusReader, read_csr
 
-sr = read_csr("path/to/sr_nao.csr")  # 旧 data-SR-sparse_SPIN0.csr 也用同一接口
-kpoints = [[0, 0, 0], [0.25, 0, 0], [0.5, 0.25, 0]]  # 倒格分数坐标
+sr = read_csr("path/to/sr_nao.csr")  # Also reads legacy data-SR-sparse_SPIN0.csr
+kpoints = [[0, 0, 0], [0.25, 0, 0], [0.5, 0.25, 0]]  # Reciprocal fractional coordinates
 Sk = sr.to_k(kpoints)               # (nk, nao, nao)
 S_gamma = sr.to_k([0, 0, 0])        # (nao, nao)
 
 reader = AbacusReader()
 Sk_checked = reader.read_overlap("path/to/sr_nao.csr", format="abacus_csr",
-                                 kpoints=kpoints)  # 逐 k 检查 Hermitian/正定
+                                 kpoints=kpoints)  # Hermitian/positive-definite checks per k
 orbitals = reader.read_wavefunctions("path/to/wfs1k1_nao.txt", spin="alpha")
 ```
 
-采用 pyATB 同样的 cell gauge：\(X(k)=\sum_R e^{+2\pi i k\cdot R}X(R)\)。
-不乘 k 权重、不除以 R 数，不假设单个 X(R) 是 Hermitian。
-多离子步文件必须显式选 `frame=0,1,...`（文件段序号，不是原始 step 标签）。
-波函数头中的 `k_cartesian` 是 **2π/lat0 单位的笛卡尔坐标**，不能直接当 kpoints；
-用 `k_cartesian_to_fractional(k_cartesian, lattice_vectors)` 转换。详情见
-[IO 合约](docs/io-formats.md)和[多 k 教程](docs/tutorials/04-csr-multik.md)。
+The cell gauge matches pyATB:
 
-## 物理核心：表示矩阵与 character
+$$X(k)=\sum_R e^{+2\pi i k\cdot R}X(R).$$
 
-轨道按列存储：\( |\psi_n\rangle=\sum_\mu |\phi_\mu\rangle C_{\mu n} \)，
-AO 重叠为 \(S_{\mu\nu}=\langle\phi_\mu|\phi_\nu\rangle\)。定义
+There is no k weight or division by the number of R vectors, and individual
+X(R) blocks need not be Hermitian. Files with multiple ionic frames require
+an explicit `frame=0,1,...` (segment index, not the original step label).
+Wavefunction-header `k_cartesian` values are Cartesian coordinates in
+**2π/lat0 units**, not reciprocal fractional coordinates. Convert them with
+`k_cartesian_to_fractional(k_cartesian, lattice_vectors)`.
+See the [IO contract](docs/io-formats.md) and
+[multi-k tutorial](docs/tutorials/04-csr-multik.md).
 
-\[
-\hat R|\phi_\nu\rangle=\sum_\mu|\phi_\mu\rangle T_{\mu\nu}(R),\qquad
-M_{\mu\nu}(R)=\langle\phi_\mu|\hat R|\phi_\nu\rangle=(ST)_{\mu\nu}.
-\]
+## Representations and characters
 
-若 \(C^\dagger SC=I\)，则
+Orbitals are stored as columns:
 
-\[
-\boxed{D(R)=C^\dagger M(R)C=C^\dagger ST(R)C},\qquad
-\boxed{\chi(R)=\operatorname{Tr}D(R)}.
-\]
+$$|\psi_n\rangle=\sum_\mu|\phi_\mu\rangle C_{\mu n},\qquad
+S_{\mu\nu}=\langle\phi_\mu|\phi_\nu\rangle.$$
 
-代码必须显式选择 `operator_kind="coefficient"`（输入 T）或 `"matrix_element"`
-（输入 M）。**本库的 M 定义不等同于 ABACUS 源码中所有名叫 M 的对象。**
+For active AO coefficient transformations T, define
 
-对尚未正交归一的子空间，计算 \(G=C^\dagger SC\)，再构造
-\(Q=CG^{-1/2}\)，用 Q 代替 C。若 G 奇异则要求重新选择子空间，不静默丢弃轨道。
-投影算符的 AO 系数表示为 \(P=QQ^\dagger S\)，闭合误差由
+$$\hat R|\phi_\nu\rangle=\sum_\mu|\phi_\mu\rangle T_{\mu\nu}(R),\qquad
+M_{\mu\nu}(R)=\langle\phi_\mu|\hat R|\phi_\nu\rangle=(ST)_{\mu\nu}.$$
 
-\[
-\epsilon_R=\frac{\|T(R)Q-QD(R)\|_S}{\sqrt{d}},\quad
-\|A\|_S^2=\operatorname{Tr}(A^\dagger SA)
-\]
+If $C^\dagger SC=I$, the subspace representation and character are
 
-衡量。只有小误差的完整不变子空间才适合赋予精确 irrep 标签。
-实际缺陷结构若有应变或 Jahn–Teller 畸变，可能不再具有精确 C3v 对称性，不能只放宽容差掩盖它。
+$$D(R)=C^\dagger M(R)C=C^\dagger ST(R)C,\qquad
+\chi(R)=\operatorname{Tr}D(R).$$
 
-### 为什么不能只看单根简并轨道
+Choose `operator_kind="coefficient"` for T or `"matrix_element"` for M.
+**This definition of M is not interchangeable with every object named M in
+ABACUS source code.**
 
-E 是二维不可约表示。对简并对 \(C_E=(c_1,c_2)\)，数值求解器可以返回任何
-\(C'_E=C_EU\)，其中 U 为二维酉矩阵。于是
+For an unnormalized subspace, form $G=C^\dagger SC$ and $Q=CG^{-1/2}$, then
+use Q in place of C. A singular G requires a different subspace selection;
+the library never silently drops orbitals. The AO coefficient projector is
+$P=QQ^\dagger S$. Closure is measured by
 
-\[
-D'(R)=U^\dagger D(R)U,\qquad \operatorname{Tr}D'(R)=\operatorname{Tr}D(R).
-\]
+$$\epsilon_R=\frac{\|T(R)Q-QD(R)\|_S}{\sqrt d},\qquad
+\|A\|_S^2=\operatorname{Tr}(A^\dagger SA).$$
 
-单根轨道的形状、对角矩阵元和“x/y 方向”依赖所选基；完整子空间的 character 不依赖它。
-只取一个实 E 分量，旋转后通常落到另一个分量，会产生明显闭合误差。
+Only a complete invariant subspace with small residuals supports an exact
+irrep assignment. Strain or Jahn–Teller distortions may remove C3v symmetry;
+loosening tolerances does not restore it.
 
-| C3v | E（恒等） | 2C3 | 3σv |
+### Analyze a complete degenerate subspace
+
+E is a two-dimensional irrep. A solver can return any unitary mixture of a
+degenerate pair, $C'_E=C_EU$. Consequently,
+
+$$D'(R)=U^\dagger D(R)U,\qquad \operatorname{Tr}D'(R)=\operatorname{Tr}D(R).$$
+
+Individual orbital shapes, diagonal matrix elements, and x/y labels depend on
+the selected basis. The complete subspace character does not. A single real E
+component generally leaks into the other component under rotation.
+
+| C3v | E (identity) | 2C3 | 3σv |
 |---|---:|---:|---:|
 | A1 | 1 | 1 | 1 |
 | A2 | 1 | 1 | −1 |
-| E（二维 irrep） | 2 | −1 | 0 |
+| E | 2 | −1 | 0 |
 
-重数采用 \(n_\alpha=\frac16\sum_c |c|\chi_\alpha(c)^*\chi(c)\)。
-程序检查其非负整数性和重构误差；可以识别 A1+E 等可约表示，不强行归为单个 irrep。
+Multiplicities are computed as
 
-## 自旋：⟨S²⟩ 能回答什么
+$$n_\alpha=\frac16\sum_c|c|\chi_\alpha(c)^*\chi(c).$$
 
-对于整数占据、共线自旋的 unrestricted Slater 行列式：
+The code checks nonnegative integer multiplicities and reconstruction error.
+Reducible representations such as A1+E are reported without forcing a single
+irrep label.
 
-\[
-\frac{\langle\hat S^2\rangle}{\hbar^2}
+## Spin: interpreting ⟨S²⟩
+
+For an integer-occupied, collinear unrestricted Slater determinant,
+
+$$\frac{\langle\hat S^2\rangle}{\hbar^2}
 =M_S^2+\frac{N_\alpha+N_\beta}{2}
--\sum_{ij}|(C_\alpha^\dagger S C_\beta)_{ij}|^2,
-\quad M_S=\frac{N_\alpha-N_\beta}{2}.
-\]
+-\sum_{ij}|(C_\alpha^\dagger SC_\beta)_{ij}|^2,\qquad
+M_S=\frac{N_\alpha-N_\beta}{2}.$$
 
-单重态、双重态、三重态的纯自旋值分别为 0、3/4、2。接口接收两个自旋通道的
-**全部已占据空间轨道**；只读一个 KS 轨道或只看 `nspin=2` 不能确认三重态。
-UKS 中该式是辅助行列式的诊断，不是精确相互作用多电子态的自旋测量。
-期望值本身也不能普遍证明自旋纯度，混合态可能具有相同的平均值。
+Pure singlets, doublets, and triplets have values 0, 3/4, and 2. The interface
+requires **all occupied spatial orbitals** in both spin channels. A single KS
+orbital or `nspin=2` cannot establish triplet character. For UKS, this is a
+diagnostic of the auxiliary determinant, rather than a measurement of the exact
+interacting state. An expectation value alone does not generally prove spin
+purity.
 
-TDA 的预留路线是，在指定的正交行列式/CSF 基底中构造完整算符后计算
-\(X^\dagger S^2_{ph}X/(X^\dagger X)\)。现有 `tda_s2` 只负责这个收缩；
-`build_s2_ph` 尚待实现。完整 LR 的 X/Y 具有响应理论的归一化，不能直接套用
-普通 CI 向量公式，`lr_s2` 暂时明确拒绝计算。推导见[自旋教程](docs/tutorials/02-spin.md)。
+`tda_s2` contracts a supplied complete operator in an orthonormal determinant
+or CSF basis as $X^\dagger S^2_{ph}X/(X^\dagger X)$; `build_s2_ph` remains
+unimplemented. Full-LR X/Y amplitudes have response-theory normalization and
+cannot simply use an ordinary CI-vector formula. `lr_s2` explicitly refuses
+that calculation. See the [spin tutorial](docs/tutorials/02-spin.md).
 
-## NV⁻：未来使用示意
+## NV⁻: an illustrative future workflow
 
-目标证据链是 ↓126 的 A1 轨道、↓127/128 的 E 子空间、LR 中 a1→e 的跃迁组分，
-再结合参考态、多电子对称性和自旋证据讨论 ³E。轨道 irrep 用小写 a1/e 表述时，
-程序仍统一返回表中的 `A1`/`E`，不自动添加自旋上标。
+The intended evidence chain combines an A1 orbital at ↓126, an E subspace at
+↓127/128, a1→e LR transition components, reference-state symmetry, and spin
+evidence to assess ³E. Orbital labels a1/e are returned as `A1`/`E`; the library
+does not attach spin superscripts automatically.
 
 ```python
 from stateid.io import AbacusReader
 from stateid.symmetry import analyze_c3v
 
-# 示意：替换成真实文件；S 和 operations 尚需人工提供/后续适配器生成。
+# Illustration only: supply real, matching files and verified AO operations.
 reader = AbacusReader()
 down = reader.read_wavefunctions("path/to/down_gamma.txt", spin="beta")
-S = reader.read_overlap("path/to/sr_nao.csr", format="abacus_csr")  # Γ 点
-# operations: 完整六个 AO 系数变换 T(R)，需先验证 AO 顺序与旋转约定。
-# 此处假设 126/127/128 是文件中从 1 开始的 band 标签；先核对原始输出！
+S = reader.read_overlap("path/to/sr_nao.csr", format="abacus_csr")
+# operations: all six AO coefficient transformations T(R).
+# Verify that 126/127/128 are one-based file band labels before selecting columns.
 a1 = analyze_c3v(down.coefficients[:, [125]], operations, S,
                  operator_kind="coefficient")
 e = analyze_c3v(down.coefficients[:, [126, 127]], operations, S,
                 operator_kind="coefficient")
 ```
 
-上面是未来真实工作流示意，`operations` 未自动生成，不是现在可直接跑的 NV⁻ 示例。
-可运行的合成示例在 `examples/c3v_minimal.py`；更完整的证据边界见
-[NV⁻ 教程](docs/tutorials/03-nv-minus.md)。
+This is an illustration requiring supplied `operations`, not a runnable NV⁻
+example. A runnable synthetic example is available in `examples/c3v_minimal.py`.
+See the [NV⁻ tutorial](docs/tutorials/03-nv-minus.md) for the evidence boundaries.
 
-## 路线图与目录
+## ABACUS TDA transition composition
 
-1. **已完成**：数值核心、C3v、行列式自旋、Gamma/多 k 文本、新旧 CSR、通用 Fourier、数组交换。
-2. **下一步优先**：收集同次计算的 C(k)、S(R)、结构及 AO 元数据，完成真实
-   \(C(k)^\dagger S(k)C(k)\approx I\) 联合回归；目前文件读取与 S(k) 已独立验证。
-3. 接入 STRU/数值轨道头信息与 AO 标签，从结构、原子映射、实球谐旋转组装 T(R,k)。
-4. 接入 ABACUS LR 全局 ph 索引、spin block、MPI 分片、X/Y 定义；先 TDA，再完整 LR。
-5. 增加真实 NV⁻ 回归案例、更多点群与多电子态分析；稳定数据模型后添加其他软件适配器。
+`read_transition_analysis` reads thresholded `trans_analysis_*_tda.dat` files,
+preserving original weights and spin/band labels. These are composition reports,
+not complete X vectors or automatic irrep/spin assignments. Usage and real NV⁻
+root-pair composition results are in the
+[transition tutorial](docs/tutorials/05-transitions.md).
+
+## Γ AO operations and TDA root subspaces
+
+`read_ao_labels` reads ABACUS `Orbital`: its first column is a zero-based atom
+index, and its m column is a real-harmonic component index converted to signed
+m. Data-row order is the AO row order of C.
+
+`build_gamma_ao_operation` uses explicit fractional positions, row-vector
+lattice vectors, and active Cartesian operations to build Γ-point T for s/p/d
+shells. It returns atom mappings, lattice return vectors, and geometric errors.
+STRU parsing and automatic symmetry discovery remain unimplemented; validate
+T†ST and orbital closure separately.
+
+`analyze_tda_c3v` supports one or two complete spin-conserving ph product blocks
+without materializing a ph² matrix. It derives the reference phase from
+explicitly supplied complete alpha/beta occupied representations and returns
+root orthonormality, reference phases, closure, group relations, and character
+diagnostics. Thresholded composition tables cannot replace complete X. Full-LR
+X/Y and automatic spin-multiplicity inference are unsupported. See the
+[AO/TDA tutorial](docs/tutorials/06-ao-tda-symmetry.md).
+
+## Roadmap and repository layout
+
+1. Completed: numerical core, C3v, determinant spin, Γ/multi-k text, legacy/modern
+   CSR, general Fourier transforms, array exchange, Γ s/p/d AO operations, and
+   matrix-free TDA subspace analysis.
+2. Next priority: collect C(k), S(R), structure, and AO metadata from the same
+   calculation for a real joint $C(k)^\dagger S(k)C(k)\approx I$ regression.
+3. Integrate STRU/orbital metadata and symmetry discovery; extend T(R,k).
+4. Recover native ABACUS LR global ph indices, spin blocks, MPI shards, and X/Y
+   conventions, starting with TDA.
+5. Add real NV⁻ regressions, more point groups, and many-electron analysis;
+   introduce other backends as the data model stabilizes.
 
 ```text
 stateid/
-├── README.md
+├── README.md / README.zh-CN.md
+├── LICENSE
 ├── pyproject.toml
 ├── src/stateid/
-│   ├── io/          # 软件适配器、数据模型、明确的格式边界
-│   ├── realspace.py # 通用稀疏 X(R) 与任意 k 点 Fourier 变换
-│   ├── symmetry/    # 表示、特征标、C3v、球谐与 ph 基础操作
-│   └── spin/        # 行列式 S²、TDA 收缩与 LR 预留 API
+│   ├── io/          # Backend adapters and explicit data contracts
+│   ├── realspace.py # Sparse X(R) and arbitrary-k Fourier transforms
+│   ├── symmetry/    # Representations, C3v, harmonics, AO and TDA operations
+│   └── spin/        # Determinant S², TDA contractions, LR placeholders
 ├── examples/c3v_minimal.py
-├── tests/          # 数学不变量、错误输入、IO 格式测试
+├── tests/          # Mathematical invariants, error paths, and IO fixtures
 └── docs/
     ├── abacus-conventions.md
     ├── io-formats.md
-    └── tutorials/  # 推导、数值诊断与物理证据链
+    ├── development/
+    └── tutorials/  # Derivations, diagnostics, and physical evidence chains
 ```
 
-本地 ABACUS 参考路径、commit 和符号约定见[约定说明](docs/abacus-conventions.md)。
-开发没有改动 ABACUS 源码，也没有把其 C++ 实现复制进本项目。
-贡献新后端时实现 `OutputReader` 协议，不让文件布局渗入物理核心。
-项目尚未选择发布许可证；公开分发前由维护者确定。
+Most detailed tutorials are currently in Chinese. Local ABACUS reference paths,
+commits, and conventions are recorded in
+[the convention notes](docs/abacus-conventions.md). Development has not modified
+ABACUS source or copied its C++ implementation into this project. New backends
+should implement `OutputReader` and keep file layouts out of the physics core.
+
+## License
+
+[MIT License](LICENSE), copyright © 2026 maki49.

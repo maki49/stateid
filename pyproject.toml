@@ -7,11 +7,13 @@ name = "stateid"
 version = "0.2.0"
 description = "Evidence-based electronic-state identification from first-principles outputs"
 readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24", "scipy>=1.10"]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
   "Topic :: Scientific/Engineering :: Physics",
 ]
 

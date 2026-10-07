@@ -32,6 +32,11 @@ def analyze_c3v(coefficients, operations, overlap=None, *, operator_kind, atol=1
             raise ValueError(f"{name}: AO operation does not preserve the overlap metric")
         if rep.closure_error > atol:
             raise ValueError(f"{name}: subspace is not closed (error={rep.closure_error:.3g})")
+    return _match_c3v_representations(reps, atol=atol)
+
+
+def _match_c3v_representations(reps, *, atol):
+    """Match already checked representations (also used by matrix-free TDA)."""
     d = {name: rep.matrix for name, rep in reps.items()}
     r, f = d["C3"], d["sv1"]
     eye = np.eye(r.shape[0])
