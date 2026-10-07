@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stateid"
+version = "0.1.0"
+description = "Evidence-based electronic-state identification from first-principles calculations"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+  { name = "stateid contributors" }
+]
+
+[project.scripts]
+stateid = "stateid.cli:main"
