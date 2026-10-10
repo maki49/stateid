@@ -20,6 +20,30 @@ def c3v_ops():
 
 
 class SymmetryTests(unittest.TestCase):
+    def test_mixed_parity_spectrum_and_complex_gauge(self):
+        from stateid.symmetry import decompose_characters
+        inversion = np.diag([1, -1])
+        rng = np.random.default_rng(93)
+        u, _ = np.linalg.qr(rng.normal(size=(2,2))+1j*rng.normal(size=(2,2)))
+        rep = project_representation(u, inversion, operator_kind="coefficient")
+        assert_allclose(np.sort_complex(rep.eigenvalues), [-1,1], atol=1e-14)
+        self.assertAlmostEqual(rep.character.real, 0)
+        assert_allclose(rep.eigenvalues.sum(), rep.character, atol=1e-14)
+        assert_allclose(rep.matrix @ rep.matrix, np.eye(2), atol=1e-14)
+        match = decompose_characters([2, rep.character],
+                                     {"Ag":[1,1], "Au":[1,-1]})
+        self.assertTrue(match.valid)
+        self.assertEqual(match.multiplicities, {"Ag":1,"Au":1})
+        self.assertIsNone(match.irrep)
+
+    def test_rotation_spectrum_preserves_complex_eigenvalues(self):
+        rep = project_representation(np.eye(3)[:,1:], c3v_ops()["C3"],
+                                     operator_kind="coefficient")
+        values = rep.eigenvalues
+        assert_allclose(np.sort(values.imag), [-np.sqrt(3)/2, np.sqrt(3)/2], atol=1e-14)
+        assert_allclose(values.real, [-.5,-.5], atol=1e-14)
+        assert_allclose(values.sum(), rep.character, atol=1e-14)
+
     def test_a1_and_e_from_coefficients(self):
         for cols, chars, label in [([0], [1, 1, 1], "A1"), ([1, 2], [2, -1, 0], "E")]:
             with self.subTest(label=label):

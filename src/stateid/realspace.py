@@ -43,8 +43,9 @@ class RealSpaceMatrix:
     format: str = "arrays"
     spin_index: int | None = None
     lattice_vectors: np.ndarray | None = None
-    lattice_constant_bohr: float | None = None
+    lattice_constant_angstrom: float | None = None
     source: str = ""
+    representation: str = "real_space"  # or gamma_folded: contains only X(Gamma)
 
     def __post_init__(self):
         r = np.asarray(self.translations)
@@ -57,6 +58,10 @@ class RealSpaceMatrix:
             raise ValueError("translations must be unique integer R vectors of shape (nR,3)")
         if isinstance(self.basis_size, bool) or size < 1 or values.shape != (len(r), size**2):
             raise ValueError("sparse matrix shape must be (nR,basis_size**2)")
+        if self.representation not in {"real_space", "gamma_folded"}:
+            raise ValueError("unknown real-space representation")
+        if self.representation == "gamma_folded" and (r.shape != (1, 3) or np.any(r)):
+            raise ValueError("a Gamma-folded matrix must contain only R=(0,0,0)")
         values.check_format(full_check=True)
         if not np.all(np.isfinite(values.data)):
             raise ValueError("matrix values must be finite")
@@ -71,6 +76,8 @@ class RealSpaceMatrix:
         For large k meshes call this method on manageable batches.
         """
         k = _vectors(kpoints, "kpoints")
+        if self.representation == "gamma_folded" and np.any(abs(k-np.rint(k)) > 1e-10):
+            raise ValueError("Gamma-folded CSR does not contain non-Gamma information")
         phases = np.exp(2j * np.pi * (np.atleast_2d(k) @ self.translations.T))
         result = np.asarray(phases @ self.values).reshape(-1, self.basis_size, self.basis_size)
         return result[0] if k.ndim == 1 else result

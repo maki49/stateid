@@ -80,11 +80,16 @@ def labels_from_character_table(reference, *, rotations, translations, kpoint,
 
 
 def c3v_labels(reference, *, atol=1e-5):
-    """Mulliken A1/A2/E at Gamma, classified by rotations, independent of axes."""
+    """Mulliken A1/A2/E for Gamma or a C3v little group with zero translations.
+
+    Finite-k line labels are point-group Mulliken names, not BCS k-line labels.
+    Translated finite-k representatives require an explicit phase-aware table.
+    """
     positive_tolerance(atol)
     g = reference.group
-    if g.order != 6 or not np.allclose(g.kpoint, 0, atol=atol, rtol=0):
-        raise ValueError("built-in C3v labels require its six operations at Gamma")
+    if g.order != 6 or not (np.allclose(g.kpoint, 0, atol=atol, rtol=0)
+                            or np.allclose(g.translations, 0, atol=atol, rtol=0)):
+        raise ValueError("C3v labels require Gamma or zero-translation representatives")
     classes = []
     for w in g.rotations:
         if np.array_equal(w, np.eye(3)):

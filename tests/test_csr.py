@@ -67,7 +67,21 @@ class CSRTests(unittest.TestCase):
         self.assertEqual(new.format, "abacus_new")
         self.assertEqual(new.ionic_step, 3)
         self.assertEqual(new.spin_index, 1)
-        self.assertEqual(new.lattice_constant_bohr, 10)
+        self.assertEqual(new.lattice_constant_angstrom, 10)
+
+    def test_gamma_folded_metadata_prevents_non_gamma_fourier(self):
+        text = csr_text({(0, 0, 0): np.eye(2)}, new=True)
+        text = text.replace("# CSR Format", "# representation: gamma-only folded matrix; "
+            "stored R-space contributions are summed into R = (0, 0, 0)\n# CSR Format", 1)
+        data = self.load(text)
+        self.assertEqual(data.representation, "gamma_folded")
+        assert_allclose(data.to_k([0, 0, 0]), np.eye(2))
+        assert_allclose(data.to_k([1, -1, 0]), np.eye(2))
+        for k in ([.25, 0, 0], [[0, 0, 0], [.25, 0, 0]]):
+            with self.assertRaisesRegex(ValueError, "Gamma-folded"):
+                data.to_k(k)
+        with self.assertRaises(ValueError):
+            self.load(text.replace("gamma-only folded matrix;", "unknown representation;"))
 
     def test_generic_matrix_from_arrays(self):
         data = RealSpaceMatrix([[0, 0, 0], [1, 0, 0]], [[2], [.2j]], 1)

@@ -43,7 +43,7 @@ avg 最后一步 thresholded 组成：root 0 的 ↓126→↓127/128 权重约 0
 
 ## 缺口 2：真实 LR MPI 分片适配
 
-参考实际计算开发树：`/home/fortneu/lr-grad/abacus-develop/source/source_esolver/esolver_lr_lcao_tddft.cpp`，约 730–750 行 writer，985–1055 行 setup/index。仓库 `docs/abacus-conventions.md` 引用另一路 `/home/fortneu/abacus/abacus-develop`，不能混用版本。
+参考实际计算开发树：`/home/fortneu/lr-grad/abacus-develop/source/source_esolver/esolver_lr_lcao_tddft.cpp`，约 730–750 行 writer，985–1065 行 setup/index。仓库 `docs/abacus-conventions.md` 引用另一路 `/home/fortneu/abacus/abacus-develop`，不能混用版本。
 
 - `Excitation_Amplitude_openshell_stepN_1.dat` 的末尾 1 是 `my_rank+1`，不是 root；每个分片包含全部 roots。
 - X state-major。每 root 的 local 长度为 `nk*(local_size_up+local_size_down)`；openshell 单一 X 容器，先 up 所有 k，再 down 所有 k。
@@ -103,7 +103,7 @@ out_wfc_lr    1
 
 - LR 每离子步先调用 KS runner，因此 C/S 对应当步 SCF 参考态和当步结构：`source/source_esolver/esolver_lr_lcao_tddft.cpp:714`。
 - KS after_scf 调用统一 LCAO 输出：`source/source_esolver/esolver_ks_lcao.cpp:625,646`；门控是 `source/source_io/module_ctrl/ctrl_scf_lcao.cpp:108-125`。out_freq_ion=1 则每步输出；0 也会在每次 KS 收敛（或 scf_nmax）输出 C/S，不能误解为“只输出 relax 最后一步”。正整数 N 为 modulo 步抽样，首步0包括，最后一步未必命中；不用它作为“仅最终”开关。
-- out_app_flag=0 波函数写到 OUT/WFC（目录创建 `source/source_io/module_parameter/read_input.cpp:287`），文件名含 g=istep+1，每帧独立文本；例 Γ spin2 `WFC/wfs1g1_nao.txt` 和 `wfs2g1_nao.txt`，第二步 g2。命名 `source/source_base/module_out/filename.cpp:105-110,135`，实际 writer `source/source_io/module_wf/write_wfc_nao.cpp:269-287`。
+- out_app_flag=0 波函数写到 OUT/WFC（目录创建 `source/source_io/module_parameter/read_input.cpp:287`），文件名含 g=istep+1，每帧独立文本；例 Γ spin2 `WFC/wfs1g1_nao.txt` 和 `wfs2g1_nao.txt`，第二步 g2。命名 `source/source_base/module_out/filename.cpp:106-110,135`，实际 writer `source/source_io/module_wf/write_wfc_nao.cpp:269-287`。
 - out_app_flag=1 波函数同名追加，每帧重新 nbands/nlocal header，无明确离子步标记：`write_wfc_nao.cpp:285`、`:69-85`。stateid 当前单帧 reader 拒绝此多帧形式。不要选它做新数据采集。
 - 文本 CSR 在 out_app_flag=0 下每步独立 `srg1_nao.csr`、`srg2_nao.csr`，H 为 hrs1g1/hrs2g1等；命名 `source/source_io/module_hs/hsr_writer.cpp:32-58`。header 是 `--- Ionic Step istep+1 ---`，包含 ucell：`:86-113`。out_app_flag=1 同名 sr_nao.csr 逐帧追加。注意当前 text writer 对 istep>0 使用 append 开文件，即使文件名已有 g；新输出目录每帧正常唯一，但重复在已有目录运行时 g2及以后的文件可能追加重复帧。重跑用新 suffix/干净目录，parser需检查帧。
 - Γ only 的 CSR 是已折叠到 R=(0,0,0) 的 SΓ/HΓ，带 representation note：`hsr_writer.cpp:290-293`。可以直接用于 Γ metric，不能当未折叠 S(R) 再做多 k。非 Γ 才保留真正 R 分解。CSR 是全局 gather，不需 MPI rank 重建：`:326-350`。
@@ -138,3 +138,15 @@ out_wfc_lr    1
 正在计算3个 TDA roots、out_wfc_lr=1、串行；完成后的原生幅度可成为不需要 MPI 拼接的最小真实 irrep 开发 fixture。**7 原子周期模型不是稀释的真实 NV 缺陷模型，不能套用63原子的126/127/128轨道编号或直接迁移其物理归属。** 它用于 IO、AO 操作、对称性投影和FD方法正确性的小系统验证。解析后自行按实际占据/能级/character选候选空间，禁止在代码中硬编码大型NV轨道编号。
 
 波函数文本精度 `source/source_io/module_wf/write_wfc_nao.cpp:80,172` 硬编码 setprecision(8)；不能假定 out_ndigits 会提升 WFC 精度。12位CSR配合8位WFC已得到上述1e-8级正交误差，设irrep/闭合容差时需考虑实际文件精度与几何近似对称性，分别报告几何偏差、metric与群关系误差，不用无依据的机器精度门槛。
+
+
+## 后续更新：真实非 Γ NV PBE（2026-10-07）
+
+早期条目中 STRU/SCF metadata 和真实 C/S 缺失的状态已更新：
+见教程08、examples/abacus_non_gamma.py、tests/fixtures/nv_non_gamma。
+本地 7 原子 PBE 已收敛；8 k × 2 spin，1336 个闭合能带子空间，48 跨 k 映射。
+新增 STRU、KPT.info、INPUT.info、SCF log、显式 nspin 的新版 WFC 集合 reader。
+CSR cell header 缩放是 Å，原 lattice_constant_bohr 误名已更正为
+lattice_constant_angstrom；原始 STRU 的同名 bohr 字段不变。
+106 tests 通过。β 的 14 是 A1、15/16 是 E，仅代表本次有限 k KS 轨道空间对称性。
+仍待原生 LR 全局 ph/spin/k/MPI 映射及振幅 adapter；未完成真实 LR 根的总态归属。

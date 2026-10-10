@@ -3,11 +3,11 @@
 ## 为什么 Γ 点必须求和，不能只取 R=0
 
 在 cell gauge 中，Bloch AO 的重叠为
-\(S(k)=\sum_R e^{+2\pi i k\cdot R}S(R)\)。因此 Γ 点是所有晶格平移块之和。
+$S(k)=\sum_R e^{+2\pi i k\cdot R}S(R)$。因此 Γ 点是所有晶格平移块之和。
 R 是整数直接晶格坐标，k 是倒格分数坐标；二者点积无量纲。
 这个正号与本地 pyATB `base_data::get_exp_ikR` 一致。
 
-Hermitian 条件是 \(S(-R)=S(R)^\dagger\)，不要求每个 R 块都 Hermitian。
+Hermitian 条件是 $S(-R)=S(R)^\dagger$，不要求每个 R 块都 Hermitian。
 合成测试刻意采用复数且单个 R 块非对称的模型，保证能发现相位符号、转置和
 提前补齐三角矩阵的错误；仅用实数 Γ 点测试发现不了这些问题。
 

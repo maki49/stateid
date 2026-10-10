@@ -1,0 +1,223 @@
+{
+  "purpose": "7-atom periodic NV- scalar non-Gamma IO/Bloch-symmetry validation, not a dilute-defect spectrum",
+  "generator": "/home/fortneu/work/LR-TDDFT-cal/grad/18_NV_diamond/gen_stru.py",
+  "lattice_angstrom_nominal": 3.5686645447981364,
+  "binary": "/home/fortneu/lr-grad/abacus-develop/build/abacus_std_para",
+  "omp_num_threads": 1,
+  "files_sha256": {
+    "/home/fortneu/work/LR-TDDFT-cal/grad/18_NV_diamond/gen_stru.py": "fff2efd0d9203f7016b5ae26ffdb02bc8983ef12920576bfbfa4745da9fb3d3e",
+    "/home/fortneu/work/LR-TDDFT-cal/grad/18_NV_diamond/111/pbe/stateid_non_gamma_20261007/INPUT": "c87f559916f23004ccfe8361838b01ff48afd68cc5e943e80e8c3f089f7c5999",
+    "/home/fortneu/work/LR-TDDFT-cal/grad/18_NV_diamond/111/pbe/stateid_non_gamma_20261007/STRU": "6f76d3d12b18b225cd1e81aa39f5ba72f7ce4c5c594a4c291be596fae24887b4",
+    "/home/fortneu/work/LR-TDDFT-cal/grad/18_NV_diamond/111/pbe/stateid_non_gamma_20261007/KPT": "8edd0d01a6e8ce221d5c45140d091d06cf6239bbfc874fe50006767a13d44088",
+    "/home/fortneu/lr-grad/abacus-develop/build/abacus_std_para": "d6d225a8b5a0862e1b86d73386cb3ce31a392def0ba099b025e8e20884332388"
+  },
+  "source_run": "/home/fortneu/work/LR-TDDFT-cal/grad/18_NV_diamond/111/pbe/stateid_non_gamma_20261007",
+  "fixture_raw_sha256": {
+    "INPUT": "c87f559916f23004ccfe8361838b01ff48afd68cc5e943e80e8c3f089f7c5999",
+    "STRU": "6f76d3d12b18b225cd1e81aa39f5ba72f7ce4c5c594a4c291be596fae24887b4",
+    "KPT": "8edd0d01a6e8ce221d5c45140d091d06cf6239bbfc874fe50006767a13d44088",
+    "STRU_FINAL": "d723610bc3237e44c03bc9e68b54ad7881daf03b9f4c8947ec44e5931c8bafb1",
+    "Orbital": "f14360bee93ecbb538437bd96dc98aa0916293908f98cb3f3fb11328009d4430",
+    "KPT.info": "464a84cf1b5a63215dedff3c921d0f0ce2ba185aac07f29b5d45511ea7d63ec7",
+    "INPUT.info": "f2c8fee1efbc5f97f0852ba85b9739a769fa2b25c9e7d6a06af5eaf63374b883",
+    "running_scf.log": "f11137f65bfa79afb1f104b7df12743de32b2e7bac881507b6c9ba246dd06fd7",
+    "srg1_nao.csr": "160c1ea5570be3d6bcc1dbbc6df02f08efaf85f1da111d20ecf38dac24e19d6e",
+    "wfk1s2g1_nao.txt": "5469e8cb269198b6cab0297960bfe03c9b2eb9e3145078d1592662530374837f",
+    "wfk2s2g1_nao.txt": "aedd817c06e445e9b9c21fe1367d7a3a34dcb2a1a5197ce30792c2c09f42c230",
+    "wfk3s2g1_nao.txt": "7771f7232014a4e806544feae3e842a3dcd728ae2b70ececeae803a36f1e1737"
+  },
+  "validation": {
+    "metadata": {
+      "version": "v3.11.0-beta10",
+      "commit": "d6f3b3b99",
+      "converged": true,
+      "iterations": 24,
+      "energy_ev": -1181.662747465605,
+      "source": "/home/fortneu/work/LR-TDDFT-cal/grad/18_NV_diamond/111/pbe/stateid_non_gamma_20261007/OUT.stateid/running_scf.log"
+    },
+    "atoms": 7,
+    "nao": 91,
+    "kpoints": [
+      [
+        -0.25,
+        -0.25,
+        -0.25
+      ],
+      [
+        -0.25,
+        -0.25,
+        0.25
+      ],
+      [
+        -0.25,
+        0.25,
+        -0.25
+      ],
+      [
+        -0.25,
+        0.25,
+        0.25
+      ],
+      [
+        0.25,
+        -0.25,
+        -0.25
+      ],
+      [
+        0.25,
+        -0.25,
+        0.25
+      ],
+      [
+        0.25,
+        0.25,
+        -0.25
+      ],
+      [
+        0.25,
+        0.25,
+        0.25
+      ]
+    ],
+    "little_group_orders": [
+      6,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      6
+    ],
+    "raw_weighted_electron_counts": [
+      16.0,
+      14.0
+    ],
+    "tolerance": 1e-05,
+    "candidate_energy_tolerance_ry": 1e-06,
+    "csr_cell_rounding_error_angstrom": 2.8871624562221143e-06,
+    "errors": {
+      "normalization": 2.2902215637315327e-08,
+      "eigen_equation_ry": 2.0767292153383483e-07,
+      "ao_metric": 6.513829568141228e-10,
+      "subspace_closure": 3.6788428983532336e-08,
+      "group_law": 6.521022902040212e-14,
+      "character_reconstruction": 6.520726962948573e-14,
+      "cross_k_closure": 7.762120693940103e-10,
+      "cross_k_metric": 6.616257291228724e-10,
+      "hamiltonian_covariance_ry": 4.067428078473196e-10
+    },
+    "accepted_subspaces": 1336,
+    "cross_k_maps_checked": 48,
+    "bloch_phase_control": {
+      "character_change": 8.899114524108741e-16,
+      "closure": 2.198205053582828e-09,
+      "omitted_phase_metric_error": 81.07248003841495,
+      "omitted_phase_closure": 0.6204453955540281
+    }
+  },
+  "selected_bands": [
+    {
+      "spin": "beta",
+      "k_index": 1,
+      "bands": [
+        10
+      ],
+      "energy_ry": [
+        0.469273215
+      ],
+      "characters_real": [
+        1.0000000000000004,
+        1.0000000000000002,
+        1.0000000000000002,
+        -1.0000000000000004,
+        -1.0000000000000002,
+        -1.0000000000000004
+      ],
+      "characters_imag": [
+        3.469446951953614e-17,
+        3.469446951953614e-17,
+        2.7755575615628914e-17,
+        -3.469446951953614e-17,
+        -4.163336342344337e-17,
+        -3.469446951953614e-17
+      ],
+      "irreps": {
+        "A2": 1
+      }
+    },
+    {
+      "spin": "beta",
+      "k_index": 1,
+      "bands": [
+        14
+      ],
+      "energy_ry": [
+        0.62684589
+      ],
+      "characters_real": [
+        1.0,
+        1.0,
+        1.0,
+        1.0000000000000002,
+        1.0,
+        0.9999999999999999
+      ],
+      "characters_imag": [
+        -5.551115123125783e-17,
+        -8.326672684688674e-17,
+        -2.7755575615628914e-17,
+        -8.326672684688674e-17,
+        -8.326672684688674e-17,
+        -5.551115123125783e-17
+      ],
+      "irreps": {
+        "A1": 1
+      }
+    },
+    {
+      "spin": "beta",
+      "k_index": 1,
+      "bands": [
+        15,
+        16
+      ],
+      "energy_ry": [
+        1.05498491,
+        1.05498491
+      ],
+      "characters_real": [
+        2.0,
+        -0.9999999999999999,
+        -0.9999999999999999,
+        -3.3306690738754696e-16,
+        -8.881784197001252e-16,
+        7.771561172376096e-16
+      ],
+      "characters_imag": [
+        -5.551115123125783e-17,
+        2.498001805406602e-16,
+        -1.5265566588595902e-16,
+        5.551115123125783e-17,
+        5.551115123125783e-17,
+        -1.1102230246251565e-16
+      ],
+      "irreps": {
+        "E": 1
+      }
+    }
+  ],
+  "radial_inputs_sha256": {
+    "/home/fortneu/work/pp_orbs/SG15_ONCV_v1.0_upf/C_ONCV_PBE-1.0.upf": "e95d682a8b918557fb57e2e0ec11b2f48cf693cb72a11d078cf07ec489a8fa99",
+    "/home/fortneu/work/pp_orbs/SG15_ONCV_v1.0_upf/N_ONCV_PBE-1.0.upf": "b8b7334fbc55c79ced5bb9486c45ce5f0dcae1b7ea5e7523cfcd9814ca58f1c8",
+    "/home/fortneu/work/pp_orbs/Orb-v2/6_C_DZP/C_gga_7au_100Ry_2s2p1d.orb": "08f13bc74ae5bd7ccc1857ff9f958867bd6421572d7c5ad3edc6dfacbe42d5ab",
+    "/home/fortneu/work/pp_orbs/Orb-v2/7_N_DZP/N_gga_7au_100Ry_2s2p1d.orb": "e8c19897070734cd4f6ad30794dc8af80b3624615b8947136ec75cd824115ed9"
+  },
+  "analysis_versions": {
+    "stateid": "0.2.0",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1",
+    "spglib": "2.7.0",
+    "spgrep": "0.7.0"
+  }
+}

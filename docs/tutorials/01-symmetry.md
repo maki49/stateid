@@ -14,8 +14,8 @@ Q D 是 TQ 在选定子空间的投影。若 TQ≠QD，选定轨道不构成不�
 此时 D 只是压缩矩阵，不是该群在此空间的精确表示。
 
 `project_representation` 返回 D、Tr D、闭合误差和 AO 度量保持误差。
-度量保持用 A†A=S 的 A 构造 \(\widetilde T=ATA^{-1}\)，检查
-\(\|\widetilde T^\dagger\widetilde T-I\|_F/\sqrt{N_{AO}}\)，避免 AO 缩放影响诊断。
+度量保持用 A†A=S 的 A 构造 $\widetilde T=ATA^{-1}$，检查
+$\|\widetilde T^\dagger\widetilde T-I\|_F/\sqrt{N_{AO}}$，避免 AO 缩放影响诊断。
 `analyze_c3v` 检查全部六个操作、类内一致性及群关系，再做匹配。
 
 输入为数值畸变结构时，应先辨别几何对称性破缺与纯数值误差。
@@ -24,12 +24,12 @@ Q D 是 TQ 在选定子空间的投影。若 TQ≠QD，选定轨道不构成不�
 
 ## 3. 用二维 E 作为最小例子
 
-令 \(\theta=2\pi/3\)，在实基中
+令 $\theta=2\pi/3$，在实基中
 
-\[
+$$
 D(C_3)=\begin{pmatrix}\cos\theta&-\sin\theta\\\sin\theta&\cos\theta\end{pmatrix},
 \quad D(\sigma_v)=\begin{pmatrix}1&0\\0&-1\end{pmatrix}.
-\]
+$$
 
 所以 χ(E)=2、χ(C3)=2cosθ=−1、χ(σv)=0。
 换成复线性组合，C3 可以对角化为 exp(±2πi/3)，但镜面仍会交换两分量；
@@ -44,9 +44,9 @@ r³=I、f²=I、frf=r²，避免把同类标签或操作方向弄错。
 
 ## 4. 重数与证据强度
 
-\[
+$$
 n_\alpha=\frac1{|G|}\sum_c |c|\chi_\alpha(c)^*\chi(c).
-\]
+$$
 
 先计算非整数的数值重数，再检查是否接近非负整数及重构误差。
 `match_characters([3,0,1])` 返回 A1+E，不把 3 维空间硬说成某一根态。
@@ -55,12 +55,12 @@ n_\alpha=\frac1{|G|}\sum_c |c|\chi_\alpha(c)^*\chi(c).
 
 ## 5. 从轨道拓展到 TDA 根
 
-对一个对称性纯的一维参考态 \(R|\Phi_0\rangle=\chi_0(R)|\Phi_0\rangle\)，
-以 \(|\Phi_i^a\rangle=a_a^\dagger a_i|\Phi_0\rangle\) 为基底，
+对一个对称性纯的一维参考态 $R|\Phi_0\rangle=\chi_0(R)|\Phi_0\rangle$，
+以 $|\Phi_i^a\rangle=a_a^\dagger a_i|\Phi_0\rangle$ 为基底，
 
-\[
+$$
 T_{ph}(R)=\chi_0(R)\,[D_{occ}(R)^*\otimes D_{virt}(R)].
-\]
+$$
 
 `particle_hole_operation` 实现这一完整张量积、单 spin block 情形，虚轨道索引变化最快。
 把一组 TDA 根的 X 当作 ph 空间中的列系数，即可用同样的投影方法研究根子空间。

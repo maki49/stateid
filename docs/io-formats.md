@@ -30,7 +30,8 @@
 `k_cartesian` 保存头中的 ABACUS `kvec_c`，单位 **2π/lat0**。
 用 `stateid.realspace.k_cartesian_to_fractional(k_cartesian, lattice_vectors)`
 转成 Fourier 所需的倒格分数坐标。lattice_vectors 是以 lat0 为单位的三个直接晶格
-行向量；不是带 Å 单位的完整晶胞。新 CSR 中可以取得它，旧 CSR 需要外部结构数据。
+行向量；不是带 Å 单位的完整晶胞。优先使用原始输入 STRU：新版 CSR 晶格头
+可能只有六位精度，STRU_FINAL 可能重设 lat0，二者都不应无条件替代输入约定。
 
 ## 原生新旧文本 CSR：统一解析
 
@@ -46,17 +47,21 @@ CSR 重复的同一矩阵位置由 SciPy 按标准语义求和；重复 R 块会
 
 返回 `RealSpaceMatrix`，用 SciPy CSR 储存 `(nR, nao*nao)` 的完整数值，
 AO 对索引按 C 顺序展平。保留原始 `ionic_step`、格式类型、spin_index（若有）、
-新版 `lattice_vectors` 与 `lattice_constant_bohr`。
+新版 `lattice_vectors` 与 `lattice_constant_angstrom`。后者修正了早期误命名的
+`lattice_constant_bohr`：UcellIO::write_ucell 实际写出 lat0×BOHR_TO_A（Å）。
 
 多段/多离子步文件必须显式传 `frame=0,1,...`；这是文件段序号，**不是原始 ionic_step**。
 `iter_csr(path)` 可以逐段读取，避免同时保存所有步。
+新版头含 gamma-only folded matrix 时，保留 representation=gamma_folded；
+这种输出只有 X(Γ)，to_k 对非 Γ 点明确拒绝，不能据 R=0 伪造多 k 信息。
+未标注的旧文件无法仅凭 R=0 推断是否折叠，调用者必须核对计算设置。
 二进制、缺少所述头/新版 CSR 标记的其他方言尚不支持。
 
 ## 任意 k 的 Fourier 与重叠矩阵检查
 
-\[
+$$
 X(k)=\sum_R e^{+2\pi i k\cdot R}X(R).
-\]
+$$
 
 `data.to_k(kpoints)`：输入 `(3,)` 返回 `(nao,nao)`；输入 `(nk,3)` 返回 `(nk,nao,nao)`。
 使用倒格分数坐标，不自动加入原子中心 τ 相位、不除以 nR、不乘 k 权重。
@@ -87,6 +92,32 @@ TDA 不含 Y，`full_lr` 必须含同形状 Y；不自动归一化，也未实�
 
 ## 仍为占位的入口
 
-`read_output`、`read_lr_eigenvectors(..., format="abacus_lr")` 明确报错。
-多 k 小群/空间群操作、跨 k 变换、spinor、自旋翻转分析和完整 LR 自旋仍需后续工作。
+`read_lr_eigenvectors(..., format="abacus_lr")` 明确报错。
+多 k 小群与跨 k 单电子变换已实现；原生 LR、spinor、自旋翻转分析和完整 LR 自旋仍待实现。
 `OutputReader` 为其他软件后端保留相同接口。
+
+
+## STRU 与计算元数据（2026-10-07 实测补充）
+
+`read_structure` 返回 `AbacusStructure`，保留输入的 `lattice_constant_bohr`、
+无量纲行 `lattice_vectors`、分数 `fractional_positions`、逐原子 `species`。
+`lattice_angstrom` 给物理晶格；`species_ids` 只是 spglib 的类型编号，不是原子序数。
+支持 Direct / Cartesian(lat0) / Cartesian_au / Cartesian_angstrom；
+中心偏移坐标、隐式 Bravais 晶格、多帧、缺失数据明确失败。
+m/v/f/mag 等尾字段原样保留，不解释为磁群。默认单位常数与已验证 ABACUS writer
+一致（0.5291770 Å/Bohr），其他版本可显式指定 bohr_to_angstrom。
+
+`read_kpoints_info` 读取实际 Direct 表，而非 KPT 的网格指令；
+保留舍入后的权重，不强制重归一化。`read_input_parameters` 返回原始字符串，
+包括 INPUT.info 中合法的空参数；不替用户补默认值。
+
+`read_scf_log` / `AbacusReader.read_output` 只解释单次 SCF 状态/版本/commit/
+迭代数/最终 eV 能量，多离子步拒绝；没有收敛标志时为 False。
+它不提供原生 LR 元数据。
+
+`read_multik_wavefunctions(WFC_dir, kpoints=..., lattice_vectors=...,
+nspin=..., ionic_step=1)` 返回 (spin, spatial_k) 的二重 tuple。
+nspin 来自显式的同次计算参数，支持标量 1/2；新版文件名
+wfk{k}s{spin}g{step}_nao.txt 用于定位，并以文件头全局编号与坐标独立核验。
+nspin=2 的 beta 全局编号是 nk+ik；旧命名继续用 read_wavefunctions 单文件入口。
+误配 k、维数或 spin/SOC 输入会失败。见[真实 NV 教程](tutorials/08-real-abacus-nv.md)。

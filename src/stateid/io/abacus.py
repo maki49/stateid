@@ -9,10 +9,8 @@ from stateid._validation import metric
 from .arrays import read_lr_npz, read_overlap_npy
 from .csr import read_csr
 from .models import OrbitalData
-
-
-class UnsupportedFormatError(NotImplementedError):
-    """The input requires an adapter that has not yet been implemented."""
+from .errors import UnsupportedFormatError
+from .metadata import read_structure, read_scf_log
 
 
 def read_wavefunctions(path, *, format="auto", spin="unspecified"):
@@ -99,7 +97,10 @@ class AbacusReader:
     """ABACUS-first adapter with explicit overlap format selection."""
 
     def read_output(self, path):
-        raise UnsupportedFormatError("running_scf/running_lr metadata parsing is planned; supply metadata explicitly")
+        return read_scf_log(path)
+
+    def read_structure(self, path, **kwargs):
+        return read_structure(path, **kwargs)
 
     def read_wavefunctions(self, path, *, format="auto", spin="unspecified"):
         return read_wavefunctions(path, format=format, spin=spin)
@@ -127,3 +128,45 @@ class AbacusReader:
         if format == "stateid_npz":
             return read_lr_npz(path)
         raise UnsupportedFormatError("native ABACUS LR amplitudes need MPI distribution and ph-order metadata; adapter pending")
+
+
+def read_multik_wavefunctions(directory, *, kpoints, lattice_vectors, nspin,
+                             ionic_step=1, atol=1e-7):
+    """Read modern complex WFC files as (spin, spatial k).
+
+    nspin=1 uses wfk{k}g{step}_nao.txt; nspin=2 adds s{spin}.
+
+    nspin must come from this run's INPUT/INPUT.info, never from filenames.
+    Only scalar nspin=1/2, complex text, one ionic step. kpoints is KPointData;
+    lattice_vectors must be the ORIGINAL input's dimensionless lattice, since
+    WFC kvec_c uses that lat0. Cross-check both global header indices and k.
+    Legacy names remain available through read_wavefunctions individually.
+    """
+    from stateid.realspace import k_cartesian_to_fractional
+    from stateid._validation import positive_tolerance
+    positive_tolerance(atol)
+    if isinstance(nspin, bool) or not isinstance(nspin, (int, np.integer)) or nspin not in (1, 2):
+        raise UnsupportedFormatError("multi-k collection requires scalar nspin=1 or 2")
+    if isinstance(ionic_step, bool) or not isinstance(ionic_step, (int, np.integer)) or ionic_step < 1:
+        raise ValueError("ionic_step must be a positive one-based integer")
+    directory = Path(directory)
+    nk = len(kpoints.indices)
+    result = []
+    shape = None
+    for ispin in range(nspin):
+        spin = ("alpha", "beta")[ispin] if nspin == 2 else "unspecified"
+        row = []
+        for ik, point in enumerate(kpoints.fractional, 1):
+            spin_suffix = f"s{ispin+1}" if nspin == 2 else ""
+            data = read_wavefunctions(
+                directory / f"wfk{ik}{spin_suffix}g{ionic_step}_nao.txt",
+                format="k_text", spin=spin)
+            actual_k = k_cartesian_to_fractional(data.k_cartesian, lattice_vectors)
+            if data.k_index != ispin * nk + ik or not np.allclose(actual_k, point, atol=atol, rtol=0):
+                raise ValueError(f"{data.source}: k index/coordinate disagrees with metadata")
+            shape = data.coefficients.shape if shape is None else shape
+            if data.coefficients.shape != shape:
+                raise ValueError("wavefunction dimensions differ across spin/k blocks")
+            row.append(data)
+        result.append(tuple(row))
+    return tuple(result)

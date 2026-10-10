@@ -1,17 +1,17 @@
 # 02：自旋诊断与 LR 的边界
 
 取 ℏ=1。由
-\(\hat S^2=\hat S_z^2+\tfrac12(\hat S_+\hat S_-+\hat S_-\hat S_+)\)，
-整数占据共线行列式具有 \(M_S=(N_\alpha-N_\beta)/2\)，交换项由两个自旋通道
+$\hat S^2=\hat S_z^2+\tfrac12(\hat S_+\hat S_-+\hat S_-\hat S_+)$，
+整数占据共线行列式具有 $M_S=(N_\alpha-N_\beta)/2$，交换项由两个自旋通道
 空间轨道的重叠决定：
 
-\[
+$$
 \langle S^2\rangle=M_S^2+\frac{N_\alpha+N_\beta}{2}
 -\sum_{i\in occ\alpha,j\in occ\beta}|\langle\psi_i^\alpha|\psi_j^\beta\rangle|^2.
-\]
+$$
 
 在同一个非正交 AO 基底中，交叉重叠是 Cα†SCβ。
-当 Nα≥Nβ 时，也可写为 \(S_z(S_z+1)+N_\beta-\sum|O_{ij}|^2\)。
+当 Nα≥Nβ 时，也可写为 $S_z(S_z+1)+N_\beta-\sum|O_{ij}|^2$。
 本库采用对 alpha/beta 对称的前一种形式，避免 beta 多数时误用公式。
 公式与 [PySCF 的 UHF spin_square 推导](https://pyscf.org/_modules/pyscf/scf/uhf.html#spin_square)一致。
 
@@ -32,12 +32,12 @@ assert abs(determinant_s2(c[:, :1], c[:, 1:]) - 1) < 1e-12   # 破缺对称行�
 
 ## TDA 还缺什么
 
-对明确的正交行列式/CSF 展开 \(|\Psi\rangle=\sum_I X_I|\Phi_I\rangle\)，
+对明确的正交行列式/CSF 展开 $|\Psi\rangle=\sum_I X_I|\Phi_I\rangle$，
 
-\[
+$$
 \langle S^2\rangle=\frac{X^\dagger S^2_{ph}X}{X^\dagger X},\qquad
 (S^2_{ph})_{IJ}=\langle\Phi_I|\hat S^2|\Phi_J\rangle.
-\]
+$$
 
 已有 `tda_s2` 只收缩用户提供的 Hermitian **绝对** S² 算符，不能传入仅激发增量
 并误称为总 S²。未来 `build_s2_ph` 需要全部已占据 alpha/beta 轨道、相关虚轨道、

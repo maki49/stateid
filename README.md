@@ -29,10 +29,10 @@ establish the NV⁻ ³E assignment.**
 | Module | Implemented | Still needed |
 |---|---|---|
 | ABACUS wavefunction IO | Single-frame Γ real and multi-k complex LCAO text | Binary, appended frames, spinor semantics |
-| ABACUS metadata | `OutputReader` / `AbacusReader` interfaces; `Orbital` AO labels | Logs, STRU, and calculation-version integration |
+| ABACUS metadata | Explicit-cell STRU, KPT.info, INPUT.info, SCF status/version, Orbital AO labels, checked multi-k collection | Multi-frame logs, implicit cells, magnetic metadata interpretation |
 | Overlap IO | Legacy/modern text CSR S(R), single/multi-k S(k), NPY | Binary and other CSR dialects |
 | LR eigenvector IO | `stateid_npz` v1: X/Y, energies, ph mapping | Native complete ABACUS LR files, MPI shard reconstruction |
-| Symmetry | S-orthonormalization, Bloch s/p/d AO maps, little groups, spgrep irreps, general character decomposition, optional IrRep labels, Γ TDA root projection | STRU integration, multi-k LR, SOC/magnetic symmetry |
+| Symmetry | S-orthonormalization, Bloch s/p/d AO maps, little groups, spgrep irreps, general character decomposition, optional IrRep labels, Γ TDA root projection | Multi-k LR, SOC/magnetic symmetry |
 | Harmonic conventions | ABACUS m order, complex/real basis conversion, Γ s/p/d proper/improper operations and periodic atom mapping | Higher angular momentum and full Wigner D |
 | Spin | Unrestricted-determinant ⟨S²⟩; TDA contraction with supplied S²_ph | Automatic S²_ph construction; full-LR spin response |
 
@@ -98,7 +98,7 @@ Bloch phase and checks metric preservation, closure, and nonsymmorphic
 projective multiplication before decomposing characters. Geometry discovery
 through `symmetry_from_structure` does not establish electronic invariance.
 
-`c3v_labels` maps Gamma irreps to A1/A2/E; `irrep_labels` assigns BCS names at
+`c3v_labels` maps Gamma or zero-translation C3v little-group irreps to A1/A2/E; `irrep_labels` assigns BCS names at
 table-covered maximal k points. Local IDs such as `irrep_0` are not standard
 labels. The IrRep adapter is isolated and version-pinned because it uses an
 internal API. `project_sewing_matrix` provides two-sided cross-k projection
@@ -264,7 +264,7 @@ m. Data-row order is the AO row order of C.
 `build_gamma_ao_operation` uses explicit fractional positions, row-vector
 lattice vectors, and active Cartesian operations to build Γ-point T for s/p/d
 shells. It returns atom mappings, lattice return vectors, and geometric errors.
-STRU parsing remains unimplemented; optional symmetry discovery is available separately. Validate
+Explicit-cell STRU parsing and optional symmetry discovery are available. Validate
 T†ST and orbital closure separately.
 
 `analyze_tda_c3v` supports one or two complete spin-conserving ph product blocks
@@ -280,12 +280,12 @@ X/Y and automatic spin-multiplicity inference are unsupported. See the
 1. Completed: numerical core, C3v, determinant spin, Γ/multi-k text, legacy/modern
    CSR, general Fourier transforms, array exchange, Γ s/p/d AO operations, and
    matrix-free TDA subspace analysis.
-2. Next priority: collect C(k), S(R), structure, and AO metadata from the same
-   calculation for a real joint $C(k)^\dagger S(k)C(k)\approx I$ regression.
-3. Integrate STRU/orbital metadata with the Bloch builder and little-group workflow.
+2. Completed: real non-Gamma NV PBE joint C/S/H/STRU/Orbital validation, metadata
+   parsers, 1,336 accepted subspaces and 48 cross-k maps; see tutorial 08.
+3. Extend format coverage and higher-angular-momentum AO rotations as real cases require.
 4. Recover native ABACUS LR global ph indices, spin blocks, MPI shards, and X/Y
    conventions, starting with TDA.
-5. Add real NV⁻ regressions and general multi-k many-electron analysis;
+5. Extend real NV⁻ regressions to excited states and general multi-k many-electron analysis;
    introduce other backends as the data model stabilizes.
 
 ```text
@@ -316,3 +316,11 @@ should implement `OutputReader` and keep file layouts out of the physics core.
 ## License
 
 [MIT License](LICENSE), copyright © 2026 maki49.
+
+## Real non-Gamma ABACUS validation
+
+A local 7-atom NV⁻ PBE calculation now validates the complete scalar C/S/H/B path.
+See [tutorial 08](docs/tutorials/08-real-abacus-nv.md), the runnable
+[analysis example](examples/abacus_non_gamma.py), and the
+[unmodified regression data](tests/fixtures/nv_non_gamma/README.md).
+106 tests pass; this small periodic model is not a dilute NV excitation benchmark.

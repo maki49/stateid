@@ -15,6 +15,16 @@ class Representation:
     closure_error: float
     ao_metric_error: float
 
+    @property
+    def eigenvalues(self):
+        """Unordered complex spectrum of D(g), invariant under basis mixing.
+
+        General unitary operations can have complex eigenvalues. Do not round
+        to +/-1 or Hermitianize; use closure/group diagnostics before assigning
+        physical meaning. The spectrum is not a band-by-band correspondence.
+        """
+        return np.linalg.eigvals(self.matrix)
+
 
 def orthonormalize(coefficients, overlap=None, *, rank_tol=1e-10):
     """Return Q=C(C†SC)^(-1/2), without silently dropping dependent columns.

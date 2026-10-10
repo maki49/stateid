@@ -1,0 +1,40 @@
+# ABACUS version: v3.11.0-beta10
+# Written at 2026-10-07 13:31:59
+# RELAX STEP 1 (FINAL), Energy: -1181.66274747 eV
+# Stress (kbar): N/A N/A N/A
+# Stress (kbar): N/A N/A N/A
+# Stress (kbar): N/A N/A N/A
+# NOTE: stress not computed (cal_stress=0); forces not computed (cal_force=0); per-atom f fields omitted intentionally
+ATOMIC_SPECIES
+C  12.0110 C_ONCV_PBE-1.0.upf upf201
+N  14.0070 N_ONCV_PBE-1.0.upf upf201
+
+NUMERICAL_ORBITAL
+6_C_DZP/C_gga_7au_100Ry_2s2p1d.orb
+7_N_DZP/N_gga_7au_100Ry_2s2p1d.orb
+
+LATTICE_CONSTANT
+1.8897268778 # in Bohr (= 1 Angstrom); lattice vectors below are in Angstrom
+
+LATTICE_VECTORS # in Angstrom
+3.5686628871624562 0.0000000000000000 0.0000000000000000
+0.0000000000000000 3.5686628871624562 0.0000000000000000
+0.0000000000000000 0.0000000000000000 3.5686628871624562
+
+ATOMIC_POSITIONS
+Cartesian_angstrom # positions in Angstrom
+
+C #label
+1.0000 #magnetism (default, overridden by per-atom mag below)
+6 #number of atoms
+1.3382485827 3.1225800263 3.1225800263 m 1 1 1 mag -0.0686
+3.1225800263 1.3382485827 3.1225800263 m 1 1 1 mag -0.0686
+3.1225800263 3.1225800263 1.3382485827 m 1 1 1 mag -0.0686
+2.2304143045 0.4460828609 0.4460828609 m 1 1 1 mag 0.6211
+0.4460828609 2.2304143045 0.4460828609 m 1 1 1 mag 0.6211
+0.4460828609 0.4460828609 2.2304143045 m 1 1 1 mag 0.6211
+
+N #label
+1.0000 #magnetism (default, overridden by per-atom mag below)
+1 #number of atoms
+2.2304143045 2.2304143045 2.2304143045 m 1 1 1 mag 0.3426

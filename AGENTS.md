@@ -10,7 +10,8 @@
 总多电子 irrep 需要参考态相位，自旋上标需要独立证据。
 
 当前新增 Γ s/p/d AO builder、Orbital 标签 reader、矩阵无关 TDA C3v 分析。
-真实 NV C/S/Orbital、STRU 解析、原生 LR MPI metadata/adapter 仍缺失。
+真实非 Γ NV C/S/H/Orbital 与 STRU/KPT.info/INPUT.info/单次 SCF 解析已实测（教程08）。
+原生 LR MPI metadata/adapter 仍缺失；不要把 KS 空间标签当作总激发态标签。
 详见 docs/tutorials/06-ao-tda-symmetry.md 和交接文档最新补充。
 缺数据或不支持的物理/格式须明确失败，不推断布局或虚构结果。
 不修改外部 ABACUS 源码；已有用户未提交改动应保留。

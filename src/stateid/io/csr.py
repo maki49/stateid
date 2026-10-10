@@ -77,13 +77,19 @@ def _header(lines):
         # The new writer embeds a structure block before its CSR banner.
         if len(cell) < 5:
             raise ValueError("missing lattice metadata in new CSR header")
-        meta["lattice_constant_bohr"] = float(cell[1])
+        meta["lattice_constant_angstrom"] = float(cell[1])
         lattice = np.array([[float(x) for x in row.split()] for row in cell[2:5]])
         if (lattice.shape != (3, 3) or not np.all(np.isfinite(lattice))
                 or np.linalg.matrix_rank(lattice) != 3
-                or not np.isfinite(meta["lattice_constant_bohr"]) or meta["lattice_constant_bohr"] <= 0):
+                or not np.isfinite(meta["lattice_constant_angstrom"]) or meta["lattice_constant_angstrom"] <= 0):
             raise ValueError("invalid lattice metadata in new CSR header")
         meta["lattice_vectors"] = lattice
+        notes = [line.partition(":")[2].strip() for line in cell
+                 if line.startswith("# representation:")]
+        if notes:
+            if len(notes) != 1 or not notes[0].startswith("gamma-only folded matrix;"):
+                raise ValueError("unsupported CSR representation metadata")
+            meta["representation"] = "gamma_folded"
     else:
         meta["format"] = "abacus_legacy"
         if line.startswith("STEP:"):
